@@ -87,6 +87,7 @@ def _get_route_query_params(start: AddressResult, goal: AddressResult) -> dict:
         "goal": json.dumps(goal.get_route_params(), ensure_ascii=False),
     }
 
+
 def get_route_url(start: AddressResult, goal: AddressResult) -> str:
     params = _get_route_query_params(start, goal)
     return f"{BASE_URL}/maps/routeResult?{urlencode(params)}"

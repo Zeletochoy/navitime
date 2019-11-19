@@ -82,6 +82,7 @@ def get_cache(query):
     with loaded_cache(readonly=True) as cache:
         return cache.get(query)
 
+
 def save_cache(query, address):
     with loaded_cache() as cache:
         cache[query] = address
