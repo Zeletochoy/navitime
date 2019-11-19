@@ -9,9 +9,9 @@ setup(
     version=VERSION,
     description='Library to interact with Navitime bicycle',
     author='Antoine Lecubin',
-    author_email='alecubin@cogent.co.jp',
+    author_email='antoinelecubin@msn.com',
     packages=find_packages(),
-    license="proprietary",
+    license="beerware",
     install_requires=[
         'requests>=2.21.0',
         'beautifulsoup4>=4.7.1',
