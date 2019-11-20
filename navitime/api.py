@@ -82,15 +82,16 @@ def refine_address_coordinates(address: AddressResult) -> None:
         address.longitude = pos.get("lon", address.longitude)
 
 
-def _get_route_query_params(start: AddressResult, goal: AddressResult) -> dict:
+def _get_route_query_params(start: AddressResult, goal: AddressResult, speed: int) -> dict:
     return {
         "bicycle": "only.multi.turn",
         "start-time": datetime.now().isoformat().rsplit(".", 1)[0],
         "start": json.dumps(start.get_route_params(), ensure_ascii=False),
         "goal": json.dumps(goal.get_route_params(), ensure_ascii=False),
+        "bicycle-speed": speed,
     }
 
 
-def get_route_url(start: AddressResult, goal: AddressResult) -> str:
-    params = _get_route_query_params(start, goal)
+def get_route_url(start: AddressResult, goal: AddressResult, speed=15) -> str:
+    params = _get_route_query_params(start, goal, speed)
     return f"{BASE_URL}/maps/routeResult?{urlencode(params)}"
