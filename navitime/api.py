@@ -1,5 +1,6 @@
 import json
 import re
+from math import sqrt
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
@@ -82,7 +83,7 @@ def refine_address_coordinates(address: AddressResult) -> None:
         address.longitude = pos.get("lon", address.longitude)
 
 
-def _get_route_query_params(start: AddressResult, goal: AddressResult, speed: int) -> dict:
+def _get_route_query_params(start: AddressResult, goal: AddressResult, speed: int = 15) -> dict:
     return {
         "bicycle": "only.multi.turn",
         "start-time": datetime.now().isoformat().rsplit(".", 1)[0],
@@ -95,3 +96,54 @@ def _get_route_query_params(start: AddressResult, goal: AddressResult, speed: in
 def get_route_url(start: AddressResult, goal: AddressResult, speed=15) -> str:
     params = _get_route_query_params(start, goal, speed)
     return f"{BASE_URL}/maps/routeResult?{urlencode(params)}"
+
+
+def get_gmaps_nav_url(start: AddressResult, goal: AddressResult) -> str:
+    params = _get_route_query_params(start, goal)
+    res = requests.get(f"{BASE_URL}/maps/route/shape", params=params)
+    shape_json = res.json()
+    stops = []
+    for stop in shape_json["features"]:
+        for coords in stop["geometry"]["coordinates"]:
+            coords = coords[::-1]
+            if not stops or coords != stops[-1]:
+                stops.append(coords)
+    stops = _filter_waypoints(stops)
+    stops = [f"{stop[0]},{stop[1]}" for stop in stops]
+    params = {
+        "travelmode": "walking",
+        "origin": stops[0],
+        "destination": stops[-1],
+    }
+    if len(stops) > 2:
+        params["waypoints"] = "|".join(stops[max(1, len(stops)-10):-1])
+    return f"https://www.google.com/maps/dir/?api=1&{urlencode(params)}"
+
+
+def _filter_waypoints(waypoints):
+    if len(waypoints) <= 11:
+        return waypoints
+    plat, plon = waypoints[0]
+    dists = []
+    total_dist = 0
+    for lat, lon in waypoints[1:]:
+        dist = sqrt((lat - plat) ** 2 + (lon - plon) ** 2)
+        total_dist += dist
+        dists.append(dist)
+        plat, plon = lat, lon
+    target = total_dist / 10
+    cur = 0
+    used = 0
+    filtered = [waypoints[0]]
+    for i, d in enumerate(dists):
+        if cur + d < target:
+            cur += d
+        elif len(filtered) == 10:
+            filtered.append(waypoints[-1])
+            break
+        else:
+            used += cur
+            target = (total_dist - used) / (11 - len(filtered))
+            filtered.append(waypoints[i])
+            cur = d
+    return filtered

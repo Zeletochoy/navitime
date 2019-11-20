@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from .api import address_search, get_route_url, refine_address_coordinates
+from .api import address_search, get_route_url, get_gmaps_nav_url, refine_address_coordinates
 
 
 ADDRESS_CACHE_PATH = Path(__file__).parent / "address-cache.pkl"
@@ -17,7 +17,8 @@ ADDRESS_CACHE_PATH = Path(__file__).parent / "address-cache.pkl"
 @click.argument("goal")
 @click.option("-s", "--skip-cache", is_flag=True)
 @click.option("-o", "--open-browser", is_flag=True)
-def find_bicycle_route(start, goal, skip_cache, open_browser):
+@click.option("-g", "--google-maps", is_flag=True)
+def find_bicycle_route(start, goal, skip_cache, open_browser, google_maps):
     start_address = get_cache(start) if not skip_cache else None
     if start_address is None:
         start_candidates = address_search(start)
@@ -32,7 +33,11 @@ def find_bicycle_route(start, goal, skip_cache, open_browser):
         refine_address_coordinates(goal_address)
         save_cache(goal, goal_address)
 
-    route_url = get_route_url(start_address, goal_address)
+    if google_maps:
+        route_url = get_gmaps_nav_url(start_address, goal_address)
+    else:
+        route_url = get_route_url(start_address, goal_address)
+
     print(f"Route from {start_address.name} to {goal_address.name}...")
     if open_browser:
         webbrowser.open(route_url)
