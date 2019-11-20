@@ -66,6 +66,9 @@ def address_search(query: str) -> List[AddressResult]:
     res = requests.get(BASE_URL, params={"keyword": query, "set": 0, "ctl": 100401})
     soup = BeautifulSoup(res.content.decode("utf-8"), "html.parser")
     onclicks = [a["onclick"] for a in soup("a")]
+    if not onclicks:
+        # Weird behaviour, sometimes it just returns a function call...
+        onclicks = [str(soup)]
     matches = [POI_RE.match(o) for o in onclicks]
     return [AddressResult.from_re_match(m) for m in matches if m is not None]
 
