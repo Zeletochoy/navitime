@@ -1,4 +1,5 @@
 import pickle
+import sys
 import webbrowser
 from contextlib import contextmanager
 from pathlib import Path
@@ -52,6 +53,9 @@ def save_address(query, name):
 
 
 def address_choice(candidates, desc):
+    if not candidates:
+        print("Address not found :(")
+        sys.exit(1)
     if len(candidates) == 1:
         return candidates[0]
     print(desc)
