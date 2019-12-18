@@ -31,7 +31,7 @@ class AddressResult:
 
     @classmethod
     def from_re_match(cls, match: re.Match) -> "AddressResult":
-        args = [None if a == "null" else eval(a) for a in match[1].split(",")]
+        args = list(eval(match[1].replace("null", "None")))
         args += [None] * (12 - len(args))
         return cls(*args)
 
